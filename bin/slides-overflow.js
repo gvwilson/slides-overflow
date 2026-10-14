@@ -4,11 +4,11 @@ import { checkPresentation } from "../lib/checker.js";
 
 function usage() {
   console.log(`
-reveal-overflow - detect overflowing content in reveal.js presentations
+slides-overflow - detect overflowing content in reveal.js and remark.js presentations
 
 Usage:
-  reveal-overflow <presentation.html> [options]
-  reveal-overflow <url> [options]
+  slides-overflow <presentation.html> [options]
+  slides-overflow <url> [options]
 
 Options:
   --threshold <px>       Allowed overflow in pixels (default: 1)
@@ -26,19 +26,19 @@ Options:
 
 Examples:
 
-  reveal-overflow docs/intro/slides.html
+  slides-overflow docs/intro/slides.html
 
-  reveal-overflow docs/intro/slides.html --fail
+  slides-overflow docs/intro/slides.html --fail
 
-  reveal-overflow docs/intro/slides.html \\
+  slides-overflow docs/intro/slides.html \\
     --width 1536 \\
     --height 864 \\
     --threshold 2
 
-  reveal-overflow docs/intro/slides.html \\
+  slides-overflow docs/intro/slides.html \\
     --screenshots ./overflow
 
-  reveal-overflow docs/intro/slides.html --json
+  slides-overflow docs/intro/slides.html --json
 `);
 }
 
@@ -151,10 +151,16 @@ function formatPx(value) {
   return `${Number(value).toFixed(1)}px`;
 }
 
+function frameworkName(framework) {
+  return framework === "remark" ? "remark.js" : "Reveal.js";
+}
+
 function printHuman(result, options) {
+  const name = frameworkName(result.framework);
+
   if (!options.quiet) {
     console.log("");
-    console.log("Reveal.js overflow check");
+    console.log(`${name} overflow check`);
 
     console.log(
       `Browser viewport: ` +
@@ -163,13 +169,13 @@ function printHuman(result, options) {
     );
 
     console.log(
-      `Reveal slide:     ` +
-        `${result.reveal.slideWidth} × ` +
-        `${result.reveal.slideHeight}px`,
+      `Slide:            ` +
+        `${result.geometry.slideWidth} × ` +
+        `${result.geometry.slideHeight}px`,
     );
 
     console.log(
-      `Reveal scale:     ` + `${Number(result.reveal.scale).toFixed(4)}`,
+      `Scale:            ` + `${Number(result.geometry.scale).toFixed(4)}`,
     );
 
     console.log(`Threshold:        ` + `${options.threshold}px`);
@@ -244,7 +250,7 @@ async function main() {
   try {
     options = parseArgs(process.argv.slice(2));
   } catch (error) {
-    console.error(`reveal-overflow: ${error.message}`);
+    console.error(`slides-overflow: ${error.message}`);
     process.exit(2);
   }
 
@@ -265,7 +271,7 @@ async function main() {
     if (options.json) {
       console.error(JSON.stringify({ error: error.message }, null, 2));
     } else {
-      console.error(`reveal-overflow: ` + `${error.message}`);
+      console.error(`slides-overflow: ` + `${error.message}`);
     }
 
     process.exit(2);
